@@ -21,6 +21,7 @@ public class Compressao {
     StringBuffer sb = new StringBuffer();
     String aux;
     int aux2;
+    int aux3;
     int tamanhoOffset;
     int tamanhoBuffer;
 
@@ -54,27 +55,52 @@ public class Compressao {
             if(offsetInicial < 0){
                 offsetInicial = 0;
             }
-            offset= aux.substring(offsetInicial, i);
-            buffer = aux.substring(i, i+ this.tamanhoBuffer);          
-            armazenaString.add("(0,0," + aux.substring(i, i + 1) + ")");
-         for (int j = this.tamanhoBuffer; j > 0; j--) {
-                String prox;
-                int index;
+            offset = aux.substring(offsetInicial, i);
+            if (i + this.tamanhoBuffer < aux.length()) {
+                buffer = aux.substring(i, i + this.tamanhoBuffer);
+            } else {
+                buffer = aux.substring(i, aux.length());
+            }       
+            String prox;
+            int index;
+            int tamanhoIndex = 0;
+            int maiorIndex = 0;
+            
+         for (int j = buffer.length(); j > 0; j--) {      
                 index = offset.lastIndexOf(buffer.substring(0, j));
-                //System.out.print(index);
-                if (index >= 0) {
-                    prox = "";
-                    if (i + this.tamanhoBuffer < aux.length()) {
-                        prox = aux.substring(i+j, i+j+1);
-                    }            
-                    armazenaString.add("(" + (offset.length() - index - 1) + "," + j + "," + prox + ")"); 
-                    this.aux2 = j;        
-                    break;              
+                aux3 = offset.length()-index;
+                if (index >= 0) {                   
+                    tamanhoIndex += j;
+                    if(j == buffer.length()){
+                        break;
+                    }else{
+                        this.aux2 = j;
+                        for(int k = j; k > 0; k--){
+                            int index2 = buffer.substring(aux2, buffer.length()).lastIndexOf(offset.substring(index, index+k));
+                            while(index2 == 0){
+                                tamanhoIndex += k;
+                                aux2 = offset.substring(index, index+k).length();
+                                index2 = buffer.substring(aux2, buffer.length()).lastIndexOf(offset.substring(index, index+k));
+                            }
+                        }
+                        break;
+                    }                   
                 }               
-            }         
-            i = i + this.aux2 +1;
-            resultado = armazenaString.stream().map(c -> c + ", ").reduce(resultado, String::concat);
         }
+        if(i+ tamanhoIndex < aux.length()){
+            prox = aux.substring(i+ tamanhoIndex,i + tamanhoIndex +1);
+        }else{
+            prox = "null";
+        }
+        if(tamanhoIndex > 0){
+            armazenaString.add("(" + aux3 + "," + tamanhoIndex + "," + prox + ")");
+        }else{
+            armazenaString.add("(0," + tamanhoIndex + "," + prox + ")");
+        }
+            i = i + tamanhoIndex +1;
+            
+        }
+        resultado = armazenaString.stream().map(c -> c + ", ").reduce(resultado, String::concat);
         return resultado;
    }   
 
